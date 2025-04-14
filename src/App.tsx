@@ -5,6 +5,13 @@ import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 
 // TODO: CSS Modules
+// Style the table
+
+/* TODO: add dnd-kit or similar to handle dragging a laureata to a 
+* special "my favourites" droppable/sortable list
+* Add a spinning newspaper effect to a confirmation prompt when dropping to the
+* favourites box
+*/
 
 interface Prizes {
   awardYear: string;
@@ -21,14 +28,15 @@ function App() {
     nobelPrizes: Prizes[];
   }[] = [];
 
-  // birthDate: string; //TODO ==> to year
   //prizeAmountAdjusted?? could be fun?
+
   const [laureates, setLaureates] = useState(laureateTypes);
   const [error, setError] = useState<Error | null>(null);
 
   const tableRef = useRef<HTMLDivElement>(null);
 
-  const nutshell = window?.Nutshell; //TODO check if window is fine
+  const nutshell = window?.Nutshell;
+  //TODO check if window is fine and fix TypeScript error
 
   if (nutshell) {
     nutshell.setOptions({
@@ -56,20 +64,23 @@ function App() {
       });
 
     if (nutshell) {
-      nutshell.start();
+      nutshell.start(); //Makes sure Nutshell starts...duh. Fixed a major issue
     }
 
     return () => {
+      //Make sure all of them are closed during cleanup, no sure if necessary
       nutshell.closeAllNutshells();
     };
   }, [nutshell]);
 
+  //Restart nutshell
   useEffect(() => {
     if (nutshell && laureates.length > 0 && tableRef.current) {
       nutshell.start(tableRef.current);
     }
   }, [laureates, nutshell]);
 
+  //Show error
   if (error) {
     return <div>{error.message}</div>;
   }
