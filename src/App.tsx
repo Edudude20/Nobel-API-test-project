@@ -2,11 +2,15 @@ import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
 import axios from "axios";
-import { useEffect, useState } from "react";
-// import Nutshell from './components/nutshell'
+import { useEffect, useRef, useState } from "react";
 
 // TODO: CSS Modules
-// TODO: Nicky Cases's Nutshell for Nobelprize facts and wikipedia links
+
+interface Prizes {
+  awardYear: string;
+  category: { en: string };
+  motivation: { en: string };
+}
 
 function App() {
   const laureateTypes: {
@@ -14,26 +18,29 @@ function App() {
     id: number;
     birth: { date: string };
     wikipedia: { english: string };
+    nobelPrizes: Prizes[];
   }[] = [];
 
-  // id: number;
-  // fullname: string;
   // birthDate: string; //TODO ==> to year
-  // wikipediaLink: string; //TODO use nutshell
-  // Facts:  [href; title] //use Nutshell
-  // Nobel prizes [{awardYear:string, category{en}, motivation{en}}]
-  // TODO use nutshell
+  //prizeAmountAdjusted?? could be fun?
   const [laureates, setLaureates] = useState(laureateTypes);
   const [error, setError] = useState<Error | null>(null);
 
-  // Nutshell.setOptions({
-  //   startOnLoad: false,
-  // })
+  const tableRef = useRef<HTMLDivElement>(null);
 
+  const nutshell = window?.Nutshell; //TODO check if window is fine
+
+  if (nutshell) {
+    nutshell.setOptions({
+      startOnLoad: true, // Start Nutshell on load? (default: true)
+      lang: "en", // Language (default: 'en', which is English)
+      dontEmbedHeadings: true,
+      // If 'true', removes the "embed this as a nutshell" option on headings
+    });
+  }
 
   useEffect(() => {
     console.log("effect");
-
     //get data
     axios
       .get("https://api.nobelprize.org/2.1/laureates")
@@ -48,16 +55,20 @@ function App() {
         setError(error);
       });
 
-      const script = document.createElement('script');
+    if (nutshell) {
+      nutshell.start();
+    }
 
-      script.src = "https://cdn.jsdelivr.net/gh/ncase/nutshell/nutshell.js"
+    return () => {
+      nutshell.closeAllNutshells();
+    };
+  }, [nutshell]);
 
-      document.head.appendChild(script);
-
-      return () => {
-        document.head.removeChild(script)
-      }
-  }, []);
+  useEffect(() => {
+    if (nutshell && laureates.length > 0 && tableRef.current) {
+      nutshell.start(tableRef.current);
+    }
+  }, [laureates, nutshell]);
 
   if (error) {
     return <div>{error.message}</div>;
@@ -74,23 +85,39 @@ function App() {
         </a>
       </div>
       <h1>Nobel Prize Laureates</h1>
-      <a href="http://localhost:5173/#NobelPrizeLaureates">:nutshellTest</a>
-      <div className="card">
+      <a href="">:nutshellTest</a>
+      <div className="table" ref={tableRef}>
         <table>
           <tbody>
             <tr>
               <th>Full Name</th>
-              <th>Birth date</th>
+              <th>Born in (year)</th>
               <th>Wikipedia Link</th>
+              <th>Prizes</th>
             </tr>
             {laureates.map((laureate) => {
               return (
                 <tr key={laureate.id} className="laureate-table-row">
                   <td>{laureate.fullName.en}</td>
                   {/* TODO: Split birth date to years */}
-                  <td>{laureate.birth.date}</td>
+                  <td>{laureate.birth.date.slice(0,4)}</td>
                   <td>
-                    <a href={laureate.wikipedia.english}>Link</a>
+                    <a href={laureate.wikipedia.english}>:Link</a>
+                  </td>
+                  <td>
+                    <ul>
+                      {laureate.nobelPrizes.map((prize) => {
+                        return (
+                          <li>
+                            {prize.awardYear}
+                            <ul>
+                              <li>{prize.category.en}</li>
+                              <li>{prize.motivation.en}</li>
+                            </ul>
+                          </li>
+                        );
+                      })}
+                    </ul>
                   </td>
                 </tr>
               );
