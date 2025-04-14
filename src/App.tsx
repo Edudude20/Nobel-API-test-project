@@ -100,7 +100,7 @@ function App() {
                 <tr key={laureate.id} className="laureate-table-row">
                   <td>{laureate.fullName.en}</td>
                   {/* TODO: Split birth date to years */}
-                  <td>{laureate.birth.date.slice(0,4)}</td>
+                  <td>{laureate.birth.date.slice(0, 4)}</td>
                   <td>
                     <a href={laureate.wikipedia.english}>:Link</a>
                   </td>
