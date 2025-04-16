@@ -1,0 +1,33 @@
+/* CSS variables? */
+
+.red {
+  color: red;
+}
+
+/* Copied partly from w3schools sidenav */
+.sidebarContainer {
+  color: red;
+  height: 100%;
+  width: 200px; /* 0 width - change this with JavaScript */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Stay on top */
+  top: 0; /* Stay at the top */
+  left: -200px;
+  background-color: aquamarine;
+  overflow-x: hidden; /* Disable horizontal scroll */
+  padding-top: 60px; /* Place content 60px from the top */
+  transition: 0.5s ease; /* 0.5 second transition effect to slide in the sidenav */
+}
+.sidebarContainer[sidebar_state=open] {
+  left: 0px;
+}
+
+#sidebarTabContainer{
+  position: fixed;
+  left: 0;
+  transition: left 0.5s ease;
+}
+.sidebarContainer[sidebar_state=open] #sidebarTabContainer{
+
+  left: 200px;
+}
