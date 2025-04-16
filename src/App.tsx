@@ -3,15 +3,40 @@ import viteLogo from "/vite.svg";
 import "./App.css";
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
+import { DndContext, DragStartEvent, useDraggable } from "@dnd-kit/core";
+
+import sidebar from "./components/Sidebar/sidebar.module.css";
+import { CSS } from "@dnd-kit/utilities";
 
 // TODO: CSS Modules
 // Style the table
 
-/* TODO: add dnd-kit or similar to handle dragging a laureata to a 
-* special "my favourites" droppable/sortable list
-* Add a spinning newspaper effect to a confirmation prompt when dropping to the
-* favourites box
-*/
+/*
+ * Add a spinning newspaper effect to a confirmation prompt when dropping to the
+ * favourites box
+ * */
+
+// TODO: add dnd-kit or similar to handle dragging a laureata to a
+//  special "my favourites" droppable/sortable list
+
+const DraggableItem = ({ id }: {id: string}) => {
+  const { attributes, listeners, setNodeRef, transform, } =
+    useDraggable({
+      id: id,
+    });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+  };
+
+  return (
+    <tr ref={setNodeRef} style={style}>
+      <button {...listeners} {...attributes}>
+        Drag Handle
+      </button>
+    </tr>
+  );
+};
 
 interface Prizes {
   awardYear: string;
@@ -31,6 +56,12 @@ function App() {
   //prizeAmountAdjusted?? could be fun?
 
   const [laureates, setLaureates] = useState(laureateTypes);
+  const [favourites, setFavourites] = useState(["One", "Two"]);
+
+  const [sidebarIsOpen, setSidebarIsOpen] = useState(false);
+  //Explicit or implicit type checking? Do I remember this correctly?
+  // Implicit I think
+
   const [error, setError] = useState<Error | null>(null);
 
   const tableRef = useRef<HTMLDivElement>(null);
@@ -80,6 +111,17 @@ function App() {
     }
   }, [laureates, nutshell]);
 
+  const handleSidebarToggle = () => {
+    console.log("toggle sidebar!");
+
+    setSidebarIsOpen(!sidebarIsOpen);
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    console.log("Drag Started!", event);
+    
+  }
+
   //Show error
   if (error) {
     return <div>{error.message}</div>;
@@ -87,55 +129,72 @@ function App() {
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Nobel Prize Laureates</h1>
-      <a href="">:nutshellTest</a>
-      <div className="table" ref={tableRef}>
-        <table>
-          <tbody>
-            <tr>
-              <th>Full Name</th>
-              <th>Born in (year)</th>
-              <th>Wikipedia Link</th>
-              <th>Prizes</th>
-            </tr>
-            {laureates.map((laureate) => {
-              return (
-                <tr key={laureate.id} className="laureate-table-row">
-                  <td>{laureate.fullName.en}</td>
-                  {/* TODO: Split birth date to years */}
-                  <td>{laureate.birth.date.slice(0, 4)}</td>
-                  <td>
-                    <a href={laureate.wikipedia.english}>:Link</a>
-                  </td>
-                  <td>
-                    <ul>
-                      {laureate.nobelPrizes.map((prize) => {
-                        return (
-                          <li>
-                            {prize.awardYear}
-                            <ul>
-                              <li>{prize.category.en}</li>
-                              <li>{prize.motivation.en}</li>
-                            </ul>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <DndContext onDragStart={handleDragStart}>
+        <aside
+          className={sidebar.sidebarContainer}
+          sidebar_state={sidebarIsOpen ? "open" : "closed"}
+        >
+          <div id={sidebar.sidebarTabContainer}>
+            <button onClick={handleSidebarToggle}>My Favourites</button>
+          </div>
+          {/* My favourite nobel prize-winners */}
+
+          <h2>My favourite laureates</h2>
+          {favourites.map((favourite) => {
+            return <p>{favourite}</p>;
+          })}
+        </aside>
+        <div>
+          <a href="https://vite.dev" target="_blank">
+            <img src={viteLogo} className="logo" alt="Vite logo" />
+          </a>
+          <a href="https://react.dev" target="_blank">
+            <img src={reactLogo} className="logo react" alt="React logo" />
+          </a>
+        </div>
+        <h1>Nobel Prize Laureates</h1>
+        <a href="">:nutshellTest</a>
+        <div className="table-container" ref={tableRef}>
+          <table>
+            <tbody>
+              <tr>
+                <th>Full Name</th>
+                <th>Born in (year)</th>
+                <th>Wikipedia Link</th>
+                <th>Prizes</th>
+              </tr>
+              {laureates.map((laureate) => {
+                return (
+                  <tr key={laureate.id}>
+                    <td>{laureate.fullName.en}</td>
+                    <td>{laureate.birth.date.slice(0, 4)}</td>
+                    <td>
+                      <a href={laureate.wikipedia.english}>:Link</a>
+                    </td>
+                    <td>
+                      <ul>
+                        {laureate.nobelPrizes.map((prize, index) => {
+                          return (
+                            // Not the best idea to add index to key, but...
+                            <li key={index}>
+                              {prize.awardYear}
+                              <ul>
+                                <li>{prize.category.en}</li>
+                                <li>{prize.motivation.en}</li>
+                              </ul>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <DraggableItem id={"1"}></DraggableItem>
+        </div>
+      </DndContext>
     </>
   );
 }
